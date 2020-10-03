@@ -56,5 +56,9 @@ jsBuilder.addListener("builded", () => {
     io.emit("reload:system");
 });
 
+const port = 8000;
 
-await app.listen({ port: 8000 });
+console.log("Dev server running at:");
+console.log(`> Local : %chttp://localhost:%c${port}/`, "color: #49a1ef", "color: #87c2f7");
+
+await app.listen({ port });

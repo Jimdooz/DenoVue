@@ -1,5 +1,5 @@
 import Vue from 'https://cdn.jsdelivr.net/npm/vue/dist/vue.esm.browser.min.js';
-import App from "./App.mjs";
+import App from "./App.vue";
 import Socket from "./socket.mjs";
 import "./index.css";
 

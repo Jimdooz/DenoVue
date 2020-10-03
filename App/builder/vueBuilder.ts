@@ -16,7 +16,7 @@ export class VueBuilder extends Builder {
         super(directoryRes, directoryBuild, options);
 
         options.extensions = {
-            'vue' : 'mjs'
+            'vue' : 'vue'
         }
     }
     

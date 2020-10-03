@@ -4,7 +4,7 @@
 
 <script>
 
-import HelloWorld from "./components/HelloWorld.mjs";
+import HelloWorld from "./components/HelloWorld.vue";
 
 export default {
     components : {
