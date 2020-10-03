@@ -51,7 +51,7 @@ export abstract class Builder extends Emitter {
         for await (const entry of walk(this.directoryRes)) {
             const extension = await getExtension(entry.name);
             if (entry.isFile && this.options.extensions && this.options.extensions[extension]) {
-                const staticPath = await Deno.realPath(new URL(entry.path, this.directoryRes).href);
+                const staticPath = await Deno.realPath(entry.path);
                 const staticPathBuild = await getPathBuild(staticPath, this.directoryRes, this.directoryBuild, this.options);
                 const fileExist = await exists(staticPathBuild);
 

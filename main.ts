@@ -4,12 +4,14 @@ import { CssBuilder } from "./App/builder/cssBuilder.ts";
 import { JsBuilder } from "./App/builder/jsBuilder.ts";
 import { IoSystem } from "./App/websocket/Websocket.ts";
 
-function staticPath(path: string) : string {
-    const os = Deno.env.get("OS");
-    return new URL(path, import.meta.url).href.replace('file:///', os?.includes("Windows") ? '' : '/');
-}
-
 const app = new Application();
+
+
+await Deno.mkdir("./build", { recursive: true });
+await Deno.mkdir("./src", { recursive: true });
+
+const srcPath = await Deno.realPath("./src");
+const buildPath = await Deno.realPath("./build");
 
 app.use(async (context) => {
     await send(context, context.request.url.pathname, {
@@ -29,20 +31,9 @@ io.on("connection", (socket : any) => {
     //TODO
 });
 
-const vueBuilder = new VueBuilder(
-	staticPath("./src/"),
-	staticPath("./build/"),
-);
-
-const cssBuilder = new CssBuilder(
-    staticPath("./src/"),
-    staticPath("./build/"),
-);
-
-const jsBuilder = new JsBuilder(
-    staticPath("./src/"),
-    staticPath("./build/"),
-);
+const vueBuilder = new VueBuilder( srcPath, buildPath );
+const cssBuilder = new CssBuilder( srcPath, buildPath );
+const jsBuilder = new JsBuilder( srcPath, buildPath );
 
 vueBuilder.addListener("builded", () => {
     io.emit("reload:system");
