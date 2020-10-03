@@ -1,8 +1,8 @@
 import { Application, send } from "https://deno.land/x/oak@v6.3.0/mod.ts";
-import { compileVue } from "./builder/vueBuilder.ts";
+import { VueBuilder } from "./builder/vueBuilder.ts";
 
 function staticPath(path: string) : string {
-    return new URL(path, import.meta.url).href.replace('file:///', '');
+    return new URL(path, import.meta.url).href.replace('file:///', '/');
 }
 
 const app = new Application();
@@ -14,7 +14,11 @@ app.use(async (context) => {
     });
 });
 
-const output = await compileVue(staticPath("./src/components/button-counter.vue"));
-console.log(output);
+
+const vueBuilder = new VueBuilder(
+	staticPath("./src/components/"),
+	staticPath("./build/components/"),
+	{ watch: true }
+);
 
 await app.listen({ port: 8000 });
