@@ -1,56 +1,46 @@
+import { Builder } from "./Builder.ts";
+import type { BuilderOptions } from "./Builder.ts";
+
 import { minify } from "./minify.ts";
-import { regexHtmlTag } from "./regex.ts";
+import { regexHtmlTag, fileNameOfPath } from "./regex.ts";
 
 //Minify options for minify function
 const minifyOptions = { module: true, compress: true, mangle: true };
 
-interface VueBuilderOption {
-	watch?: boolean,
+interface VueBuilderOption extends BuilderOptions {
 }
 
-export class VueBuilder {
-	protected stopWatch : boolean = false;
-	protected path: string;
-	protected pathBuild: string;
-	protected options: VueBuilderOption;
+export class VueBuilder extends Builder {
 
-	constructor(path: string, pathBuild: string, options: VueBuilderOption = {}){
-		if(options.watch) this.watchSystem(path);
-		
-		this.path = path;
-		this.pathBuild = pathBuild;
-		this.options = options;
-	}
-	
-	async watchSystem(path: string) {
-		const watcher = Deno.watchFs(path);
-		
-		for await (const event of watcher) {
-			if(this.stopWatch) break;
-			if(event.kind == "modify" || event.kind == "create"){
-				if(event.paths.length == 1 && event.paths[0].endsWith(".vue"))
-					await buildAndSave(event.paths[0],this.path, this.pathBuild);
-			}
-		}
-	}
-	
-	async stop(){
-		this.stopWatch = true;
-	}
+    constructor(directoryRes: string, directoryBuild: string, options: VueBuilderOption = {}){
+        super(directoryRes, directoryBuild, options);
+
+        options.extensions = {
+            'vue' : 'mjs'
+        }
+    }
+    
+    async buildAndSave(fileRes: string, fileSave: string): Promise<boolean> {
+        await buildAndSave(fileRes, fileSave);
+        return true;
+    }
 }
 
-async function buildAndSave(pathFile: string, pathWatch: string, pathBuild: string) {
-	console.log("File to build", pathFile);
-	console.log("Path to build", pathBuild);
-	console.log("Build to >>", pathFile.replace(pathWatch, pathBuild));
+async function buildAndSave(pathFile: string, pathSave: string) {    
+    const filenameExtension = fileNameOfPath(pathSave);
+    const directoryBuild = pathSave.replace(filenameExtension, '');
+    await Deno.mkdir(directoryBuild, { recursive: true });
+
+    const buildedContent = await compileVue(pathFile);
+    
+    await Deno.writeTextFile(pathSave, buildedContent);
 }
 
 /**
  * Convert a .vue file into a module script
  * @param path the path of the file to be build
  */
-export async function compileVue(path: string){
-    console.log(`Demande de la compilation du fichier ${path}`);
+export async function compileVue(path: string): Promise<string> {
     let vueFile : string = await Deno.readTextFile(path);
     if (vueFile.length == 0) throw "The file is empty";
 
@@ -63,9 +53,10 @@ export async function compileVue(path: string){
 
     const concatenate = await concatenateVueSystem(template, script, style);
     const minification = minify(concatenate, minifyOptions);
-    if (!minification.error){
-        return minification.code;
-    }
+
+    if (minification.error) throw minification.error;
+
+    return minification.code ? minification.code : '';
 }
 
 /**
@@ -119,7 +110,7 @@ function cleanWhiteSpace(value: string) : string {
  * @param style the style part
  */
 async function concatenateVueSystem(template: string, script: string, style: string) : Promise<string> {
-    const concatenate = script.replace(/export default\s*{/g, `${await convertStyleToJs(style)};\nexport default { template : \`${template}\`,`);
+    const concatenate = (style ? 'import { addStyle } from "/client.mjs";' : '') +script.replace(/export default\s*{/g, `${await convertStyleToJs(style)};\nexport default { template : \`${template}\`,`);
     return concatenate;
 }
 
@@ -128,10 +119,11 @@ async function concatenateVueSystem(template: string, script: string, style: str
  * @param style the style content
  */
 async function convertStyleToJs(style: String): Promise<string>{
-    return `
-      const styleSheet = document.createElement("style")
-      styleSheet.type = "text/css"
-      styleSheet.innerText = \`${style.trim()}\`
-      document.head.appendChild(styleSheet)
-    `;
+    return style ? `addStyle(\`${style.trim()}\`)` : '';
+    // return `
+    //   const styleSheet = document.createElement("style")
+    //   styleSheet.type = "text/css"
+    //   styleSheet.innerText = \`${style.trim()}\`
+    //   document.head.appendChild(styleSheet)
+    // `;
 }

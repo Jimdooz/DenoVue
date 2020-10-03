@@ -1,1 +1,0 @@
-console.log("Coucou les gens :D"); const t = document.createElement("style"); t.type = "text/css", t.innerText = ".maButton{ color: blue; }", document.head.appendChild(t); export default { template: ' <button class="maButton" @click="count++">You clicked me {{ count }} times.</button> ', data: function () { return { count: 0 } } };
