@@ -151,8 +151,6 @@ class Socket extends SocketInstance {
             urlComposer.port = 3000;
         }
         return urlComposer;
-        // this.namespace = urlComposer.pathname;
-        // return `ws://${urlComposer.hostname}:${urlComposer.port}/websocket${urlComposer.pathname}`;
     }
 }
 

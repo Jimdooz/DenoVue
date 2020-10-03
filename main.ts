@@ -26,7 +26,7 @@ app.use(async (context) => {
 const io = new IoSystem();
 
 io.on("connection", (socket : any) => {
-    console.log("New connection", socket ? true : false);
+    //TODO
 });
 
 const vueBuilder = new VueBuilder(
